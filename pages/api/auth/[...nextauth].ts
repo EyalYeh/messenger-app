@@ -21,24 +21,27 @@ export default NextAuth({
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        if (!credentials) return null;
+        if (!credentials?.email || !credentials?.password){
+          throw new Error("Missing credentials");
+        }
 
-        const { email, password } = credentials;
+       const user = await prisma.user.findUnique({
+       where: { email: credentials.email },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          hashedPassword: true, 
+        },
+       });
 
-        const user = await prisma.user.findUnique({
-          where: { email },
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            hashedPassword: true, // Explicitly include this field for TypeScript
-          },
-        });
+        if (!user ) throw new Error("No user was found");
 
-        if (!user || !user.hashedPassword) return null;
+       const isValid = user.hashedPassword
+         ? await bcrypt.compare(credentials.password, user.hashedPassword)
+         : false;
+       if (!isValid) throw new Error("Password is not valid");
 
-        const isValid = await bcrypt.compare(password, user.hashedPassword);
-        if (!isValid) return null;
 
         return {
           id: user.id,
