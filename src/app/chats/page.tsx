@@ -18,7 +18,7 @@ export default function ChatsPage() {
   const newMessages: Message[] = [
     ...messages,
     { sender: "user", content: input },
-    { sender: "bot", content: "The chat is not fully active yet." }
+    { sender: "bot", content: "The chat is sadly not fully active yet." }
   ];
   setMessages(newMessages);
   setInput("");
